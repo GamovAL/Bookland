@@ -6,26 +6,33 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../static/css/style.css"/>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='ico/ico.png') }}">
     <title>{{title}}</title>
 </head>
-<body>
+<body style="background-color: #D5BDAD">
 <header>
-    <nav class="navbar navbar-light bg-light">
-        <h1>Миссия Колонизация Марса</h1>
-
-        {% if current_user.is_authenticated %}
-        <a class="navbar-brand" href="/logout">{{ current_user.name }} {{ current_user.surname }}</a>
-        {% else %}
-        <p>
-            <a class="btn btn-primary " href="/register">Register</a>
-            <a class="btn btn-success" href="/login">Log in</a>
-        </p>
-        {% endif %}
-        <a class="navbar-brand" href="#">Mars One</a>
+    <nav class="navbar navbar-expand navbar-dark" style="background-color: #4D220E;">
+            <a class="navbar-brand" href="/"><h1>Bookland</h1></a>
+            <a class="nav-link" href="/">Бибилиотека</a>
+            {% if current_user.is_authenticated %}
+                {% if current_user.role == "manager" %}
+                    <a href="/add-product" class="nav-link">Добавить книгу</a>
+                    <a class="nav-link" href="/orders">Заказы</a>
+                    <a class="nav-link" href="list-user">Пользователи</a>
+                {% else %}
+                    <a class="nav-link" href="/basket">Корзина</a>
+                {% endif %}
+            <a href="/edituser" class="user-name">{{ current_user.name }}</a>
+            <a href="/logout" style="margin-left: 40%" class="btn btn-outline-danger btn-lg" role="button">Выйти</a>
+            {% else %}
+                <a class="nav-link" href="/basket">Корзина</a>
+                <div style="margin-left: 50%">
+                <a href="/register" class="btn btn-success btn-lg" role="button">Зарегистрироваться</a>
+                <a href="/login" class="btn btn-primary btn-lg" role="button">Войти</a>
+                </div>
+            {% endif %}
     </nav>
-    <h4>И на Марсе будут яблони цвести!</h4>
 </header>
-<!-- Begin page content -->
 <main role="main" class="container">
     {% block content %}{% endblock %}
 </main>

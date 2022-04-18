@@ -1,49 +1,51 @@
 {% extends "base.html" %}
-
 {% block content %}
+    <form class="navbar-form navbar-left" method="GET">
+        <div class="input-group" style="margin: 0 auto;width: 500px;">
+            <input type="search" class="form-control rounded" placeholder="Запрос" name="q" value="{{ request.args.get('q', '') }}" aria-label="Search"
+                   aria-describedby="search-addon"/>
+            <button type="submit" class="btn btn-primary">Искать</button>
+        </div>
+    </form>
 <meta charset="UTF-8">
-
-<h2 align="center">Works log</h2>
-{% if current_user.is_authenticated %}
-<p align="justify">
-    <a href="departments" class="btn btn-secondary">View Departments</a>
-    <a href="addjob" class="btn btn-secondary">Add job</a>
-    <a href="add_depart" class="btn btn-secondary">Add a Department</a></p>
-{% endif %}
-{% for job in jobs %}
-<h3>Action # {{ job.id }}</h3>
-<div class="table_container">
-    <table class="my_table">
-        <tr class="my_row">
-            <td class="title" width="400px" bgcolor="#dddddd">Title of activity</td>
-            <td class="title" width="150px" bgcolor="#dddddd">Team leader</td>
-            <td class="title" width="100px" bgcolor="#dddddd" align="center">Duration</td>
-            <td class="title" width="200px" bgcolor="#dddddd" align="center">List of collaborators</td>
-            <td class="title" width="200px" bgcolor="#dddddd" align="center">Hazard category</td>
-            <td class="title" width="100px" bgcolor="#dddddd" align="center">Is finished</td>
-        </tr>
-        <tr class="my_row">
-            <td class="ordinary" bgcolor="#eeeeff">{{ job.job.capitalize() }}</td>
-            <td class="ordinary" bgcolor="#eeeeff">{{ names[job.team_leader][0] }} {{ names[job.team_leader][1] }}</td>
-            <td class="ordinary" bgcolor="#eeeeff" align="center">{{ job.work_size }} hours</td>
-            <td class="ordinary" bgcolor="#eeeeff" align="center">{{ job.collaborators }}</td>
-            <td class="ordinary" bgcolor="#eeeeff" align="center">{{ job.category }}</td>
-            {% if job.is_finished %}
-            <td class="ordinary" bgcolor="#eeffee" align="center">Finished</td>
-            {% else %}
-            <td class="ordinary" bgcolor="#ffeeff" align="center">Is not finished</td>
-            {% endif %}
-        </tr>
-
-    </table>
+<div class="catalog">
+    <div class="row is-flex" style="justify-content: center;">
+        {% for book in books %}
+        <div class="product col-12 col-sm-60 col-md-40">
+            <div class="product-container" style="background:#FFFFFF">
+                <div class="product-main">
+                    <img alt="фото" class="d-block w-800" style="margin: 0 auto;"
+                         src="{{ url_for('static', filename=book.image) }}">                        </a>
+                    <div class="product-name" style="position:relative;text-align: center;">
+                        <p>{{ book.title }}</p>
+                        <p>Автор: {{ book.author }}</p>
+                    </div>
+                    <div class="product-description" style="position:relative;text-align: center;">{{ book.description }}</div>
+                    <div class="product-item" style="position:relative;text-align: center;">
+                        <div class="product-item-dimension" >
+                            {{ book.pages }} Страниц
+                        </div>
+                        <div class="product-item-price" >
+                            {{ book.cost }}<span> ₽</span>
+                        </div>
+                    </div>
+                    <div class="buttons" style="position:relative;text-align: center;">
+                        <a href="/download_pdf/{{ book.id }}" class="btn btn-info">Посмотреть в PDF</a>
+                        {% if current_user.is_authenticated and current_user.role == 'manager' %}
+                        <a href="/edit_product/{{ book.id }}" class="btn btn-warning">Редактировать</a>
+                        <a href="/product_delete/{{ book.id }}" class="btn btn-danger">Удалить</a>
+                        {% else %}
+                        {% if book.id|string in basket %}
+                        <a href="/del_basket/{{ book.id }}" class="btn btn-warning">Удалить из корзины</a>
+                        {% else %}
+                        <a href="/add_basket/{{ book.id }}" class="btn btn-success">В корзину</a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
-<br>
-{% if current_user.is_authenticated and current_user.id == job.team_leader or current_user.id == 1  %}
-<div>
-    <a href="/jobs/{{ job.id }}" class="btn btn-warning">Edit Job</a>
-    <a href="/job_delete/{{ job.id }}" class="btn btn-danger">Delete job</a>
-</div>
-{% endif %}
-{% endfor %}
-
 {% endblock %}
