@@ -77,6 +77,43 @@ def index():  # главная страница
     return render_template("index.html", books=book, title='Bookland', basket=basket)
 
 
+@app.route('/add_basket/<int:id>')
+def add_basket(id):                             # Функция для корзины добавление книг
+    if 'basket' in session:
+        basket = json.loads(session['basket'])
+        basket[id] = 1
+        session['basket'] = json.dumps(basket)
+    else:
+        session['basket'] = json.dumps({id: 1})
+    return redirect('/')
+
+
+@app.route('/del_basket/<int:id>')
+def del_basket(id):                              # Функция для корзины удаление книг
+    basket = json.loads(session['basket'])
+    basket.pop(str(id))
+    session['basket'] = json.dumps(basket)
+    return redirect('/')
+
+
+@app.route('/basket')
+def basket():                                   # Корзина
+    if 'basket' in session:
+        basket = json.loads(session['basket'])
+        id_basket = list(map(int, basket.keys()))
+        db_sess = db_session.create_session()
+        books = db_sess.query(Book).filter(Book.id.in_(id_basket))
+        li = []
+        for i in books:
+            i.count = basket[str(i.id)]
+            li.append(i)
+        summa = sum(map(lambda x: x.count * x.cost, li))
+        order_button = True
+        if not basket:
+            order_button = False
+        return render_template('basket.html', books=books, sum=summa, order_button=order_button)
+
+
 @app.template_filter('strftime')
 def _jinja2_filter_datetime(date, fmt=None):
     # date = datetime.strptime(date, '%Y-%m-%d H:M:f')

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Корзина</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Название</th>
+      <th scope="col">Автор</th>
+      <th scope="col">Состав</th>
+      <th scope="col">Масса</th>
+      <th scope="col">Цена</th>
+      <th scope="col">Количество</th>
+      <th scope="col">Сумма</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for book in books %}
+    <tr>
+      <td>{{ book.title }}</td>
+      <td>{{ book.author }}</td>
+      <td>{{ book.description }}</td>
+      <td>{{ book.weight }}</td>
+      <td>{{ book.cost }}</td>
+      <td>
+        <div class="numberincrementer">
+          <a href="/prepend/{{ book.id }}"><div class="prepend">-</div></a>
+          <div class="number" style="color:#000000">{{ book.count }}</div>
+          <a href="/append/{{ book.id }}"><div class="append">+</div></a>
+        </div>
+      </td>
+      <td>{{ book.cost * book.count }}</td>
+      <td class="adel"><a href="/del/{{ book.id }}"><div class="del">X</div></a></td>
+    </tr>
+  {% endfor %}
+  <tr>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td>Итого:</td>
+    <td>{{ sum }}</td>
+    {% if order_button %}
+      <td><a href="/order" class="btn btn-danger">Заказать</a></td>
+    {% endif %}
+  </tr>
+  </tbody>
+</table>
+
+{% endblock %}
