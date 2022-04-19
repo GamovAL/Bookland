@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, session, send_from_directory
-from flask_login import LoginManager
+from flask import Flask, render_template, redirect, request, session, send_from_directory
+from flask_login import LoginManager, login_user
 import json
 
 from data import db_session
 from data.users import User
 from data.book import Book
+from forms.login_form import LoginForm
+from forms.register import RegisterForm
 
 
 app = Flask(__name__)
@@ -14,8 +16,51 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+@login_manager.user_loader
+def load_user(user_id):
+    db_sess = db_session.create_session()
+    return db_sess.query(User).get(user_id)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():                                     # Авторизация пользователя
+    form = LoginForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.email == form.email.data).first()
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember_me.data)
+            return redirect("/")
+        return render_template('login.html', message="Неправильный логин или пароль", form=form)
+    return render_template('login.html', title='Авторизация', form=form)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def reqister():                                          # Регистрация
+    form = RegisterForm()
+    if form.validate_on_submit():
+        if form.password.data != form.password_again.data:
+            return render_template('register.html', title='Register', form=form,
+                                   message="Пароли не совпадают")
+        db_sess = db_session.create_session()
+        if db_sess.query(User).filter(User.email == form.email.data).first():
+            return render_template('register.html', title='Register', form=form,
+                                   message="Этот пользователь уже существует")
+        user = User(
+            name=form.name.data,
+            email=form.email.data,
+            telephone=form.telephone.data,
+            address=form.address.data
+        )
+        user.set_password(form.password.data)
+        db_sess.add(user)
+        db_sess.commit()
+        return redirect('/login')
+    return render_template('register.html', title='Регистрация', form=form)
+
+
 @app.route("/")
-def index():       #главная страница
+def index():  # главная страница
     q = request.args.get('q')
     # book = db_sess.query.filter(Book.title.contains(q) | Book.description.contains(q)).all()
     if 'basket' not in session:
@@ -40,7 +85,7 @@ def _jinja2_filter_datetime(date, fmt=None):
 
 
 @login_manager.user_loader
-def load_user(user_id):                      # Авторизация пользователя
+def load_user(user_id):  # Авторизация пользователя
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
 
