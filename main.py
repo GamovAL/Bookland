@@ -1,16 +1,17 @@
 from flask import Flask, render_template, redirect, request, session, send_from_directory
-from flask_login import LoginManager, login_user, current_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 import json
 
 from data import db_session
+from forms.add_product import AddProductForm
+from forms.login_form import LoginForm
 from data.users import User
 from data.book import Book
-from forms.login_form import LoginForm
-from forms.register import RegisterForm
 from data.order import Order, Association
-from datetime import datetime, timedelta
+from forms.register import RegisterForm
 from forms.order_form import Order_Form
-
+from forms.product_edit import ProductEdit
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -78,6 +79,86 @@ def index():  # главная страница
     else:
         basket = {}
     return render_template("index.html", books=book, title='Bookland', basket=basket)
+
+
+@app.route('/add-product', methods=['GET', 'POST'])
+def add_product():                                  # Функция для добавления книг
+    add_form = AddProductForm()
+
+    if add_form.validate_on_submit():
+        db_sess = db_session.create_session()
+        if add_form.image.data:
+            img = request.files[add_form.image.name].read()
+            img_name = datetime.now().strftime('%d%m%y%S%M%H')
+            format_file = add_form.image.data.filename.split('.')[-1]
+            with open(f'static/img/{img_name}.{format_file}', 'wb') as f:
+                f.write(img)
+        if add_form.pdf.data:
+            pdf = request.files[add_form.pdf.name].read()
+            pdf_name = datetime.now().strftime('%d%m%y%S%M%H')
+            format_file_pdf = add_form.pdf.data.filename.split('.')[-1]
+            with open(f'static/pdf/{pdf_name}.{format_file_pdf}', 'wb') as f:
+                f.write(pdf)
+
+        book = Book(
+            title=add_form.title.data,
+            author=add_form.author.data,
+            description=add_form.description.data,
+            pages=add_form.pages.data,
+            cost=add_form.cost.data,
+            image=f'img/{img_name}.{format_file}',
+            pdf=f'pdf/{pdf_name}.{format_file_pdf}'
+        )
+        db_sess.add(book)
+        db_sess.commit()
+        return redirect('/')
+    return render_template('addbook.html', title='Добавление книги', form=add_form)
+
+
+@app.route('/edit_product/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_product(id):                                  # Функция для редактирования книг
+    form = ProductEdit()
+    db_sess = db_session.create_session()
+    book = db_sess.query(Book).get(id)
+    if form.validate_on_submit():
+        book.title = form.title.data
+        book.author = form.author.data
+        book.description = form.description.data
+        book.pages = form.pages.data
+        book.cost = form.cost.data
+        if form.image.data:
+            img = request.files[form.image.name].read()
+            img_name = datetime.now().strftime('%d%m%y%S%M%H')
+            format_file = form.image.data.filename.split('.')[-1]
+            with open(f'static/img/{img_name}.{format_file}', 'wb') as f:
+                f.write(img)
+            book.image = f'img/{img_name}.{format_file}'
+        if form.pdf.data:
+            pdf = request.files[form.pdf.name].read()
+            pdf_name = datetime.now().strftime('%d%m%y%S%M%H')
+            format_file_pdf = form.pdf.data.filename.split('.')[-1]
+            with open(f'static/pdf/{pdf_name}.{format_file_pdf}', 'wb') as f:
+                f.write(pdf)
+            book.pdf = f'pdf/{pdf_name}.{format_file_pdf}'
+        db_sess.commit()
+        return redirect('/')
+    form.title.data = book.title
+    form.author.data = book.author
+    form.description.data = book.description
+    form.pages.data = book.pages
+    form.cost.data = book.cost
+    return render_template('product_edit.html', title='Редактировать книгу', form=form, book=book)
+
+
+@app.route('/product_delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def product_delete(id):                                           # Функция для удаления книг
+    db_sess = db_session.create_session()
+    book = db_sess.query(Book).get(id)
+    db_sess.delete(book)
+    db_sess.commit()
+    return redirect('/')
 
 
 @app.route('/add_basket/<int:id>')
