@@ -34,6 +34,7 @@
                         {% if current_user.is_authenticated and current_user.role == 'manager' %}
                         <a href="/edit_product/{{ book.id }}" class="btn btn-warning">Редактировать</a>
                         <a href="/product_delete/{{ book.id }}" class="btn btn-danger">Удалить</a>
+                        <a href="/add_basket/{{ book.id }}" class="btn btn-success">В корзину</a>
                         {% else %}
                         {% if book.id|string in basket %}
                         <a href="/del_basket/{{ book.id }}" class="btn btn-warning">Удалить из корзины</a>

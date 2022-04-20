@@ -350,7 +350,7 @@ def download_pdf(id):
 
 def main():
     db_session.global_init("db/Bookland.sqlite")
-    app.run(debug=True)
+    app.run(debug=False)
 
 
 if __name__ == '__main__':
