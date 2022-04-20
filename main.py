@@ -5,6 +5,7 @@ import json
 from data import db_session
 from forms.add_product import AddProductForm
 from forms.login_form import LoginForm
+from forms.edit_user import EditUser
 from data.users import User
 from data.book import Book
 from data.order import Order, Association
@@ -24,6 +25,84 @@ login_manager.init_app(app)
 def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.query(User).get(user_id)
+
+
+@app.route('/delorder/<id>')
+@login_required
+def del_order(id):
+    db_sess = db_session.create_session()
+    order = db_sess.query(Order).get(int(id))
+    db_sess.delete(order)
+    db_sess.commit()
+    return redirect('/orders')
+
+
+@app.route('/orders')
+@login_required
+def orders():
+    db_sess = db_session.create_session()
+    orders = db_sess.query(Order).all()
+    for order in orders:
+        summ = 0
+        for book in order.books:
+            summ += book.book.cost * book.count
+        order.cost = summ
+    return render_template('orders.html', orders=orders, title='Заказы')
+
+
+@app.route('/manager-<id>')  # Переключаем роль пользователя
+@login_required
+def switch_role(id):
+    if id != '1':
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(id)
+        if user.role:
+            user.role = None
+        else:
+            user.role = 'manager'
+        db_sess.commit()
+        return redirect('/list-user')
+    return redirect('/list-user')
+
+
+@app.route('/list-user')
+@login_required                       # Функция чтобы смотреть список пользователей
+def list_user():
+    db_sess = db_session.create_session()
+    users = db_sess.query(User).all()
+    return render_template('list_user.html', users=users, title='Пользователи')
+
+
+@app.route('/edituser', methods=['GET', 'POST'])
+@login_required
+def edituser():                                       # Редактировать профиль
+    edit_form = EditUser()
+    db_sess = db_session.create_session()
+    if edit_form.validate_on_submit():
+        user = db_sess.query(User).get(current_user.id)
+        user.name = edit_form.name.data
+        user.email = edit_form.email.data
+        user.address = edit_form.address.data
+        user.telephone = edit_form.telephone.data
+        if edit_form.password.data:
+            user.set_password(edit_form.password.data)
+        db_sess.commit()
+        return redirect('/')
+
+    user = db_sess.query(User).get(current_user.id)
+    edit_form.name.data = user.name
+    edit_form.email.data = user.email
+    edit_form.telephone.data = user.telephone
+    edit_form.address.data = user.address
+
+    return render_template('edituser.html', form=edit_form, title='Редактировать профиль')
+
+
+@app.route('/logout')
+@login_required             # Выход из аккаунта
+def logout():
+    logout_user()
+    return redirect("/")
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -252,9 +331,7 @@ def order():
 
 @app.template_filter('strftime')
 def _jinja2_filter_datetime(date, fmt=None):
-    # date = datetime.strptime(date, '%Y-%m-%d H:M:f')
-    format = '%d.%m.%y, %H:%M'
-    return date.strftime(format)
+    return date.strftime('%d.%m.%y, %H:%M')
 
 
 @login_manager.user_loader
