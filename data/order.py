@@ -16,9 +16,9 @@ class Association(SqlAlchemyBase):
 class Order(SqlAlchemyBase):
     __tablename__ = 'order'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_name = Column(String, nullable=True)
-    telephone = Column(String, nullable=True)
-    address = Column(String, nullable=True)
+    user_name = Column(String(200), nullable=True)
+    telephone = Column(String(200), nullable=True)
+    address = Column(String(200), nullable=True)
     time_order = Column(DateTime, default=datetime.datetime.now)
     time_delivery = Column(DateTime, nullable=True)
     books = relationship("Association", back_populates="order", cascade="all, delete-orphan")

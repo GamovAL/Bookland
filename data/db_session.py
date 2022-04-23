@@ -20,7 +20,7 @@ def global_init(db_file):
     conn_str = f'sqlite:///{db_file.strip()}?check_same_thread=False'
     print(f"Подключение к базе данных по адресу {conn_str}")
 
-    engine = sa.create_engine(conn_str, echo=False)
+    engine = sa.create_engine('mysql+mysqldb://Alexarunk:z7u-KEL-2m4-8VA@Alexarunk.mysql.pythonanywhere-services.com/Alexarunk$bookland', pool_recycle=280, echo=False)
     __factory = orm.sessionmaker(bind=engine)
 
     # noinspection PyUnresolvedReferences
