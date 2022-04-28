@@ -15,10 +15,16 @@ from forms.product_edit import ProductEdit
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
+db_session.global_init("db/Bookland.sqlite")
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_sess.remove()
 
 
 @login_manager.user_loader
@@ -348,9 +354,5 @@ def download_pdf(id):
                                filename=pdf.pdf.split('/')[1])
 
 
-def main():
-    db_session.global_init("db/Bookland.sqlite")
-    app.run(debug=False)
 
 
-main()
